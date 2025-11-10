@@ -6,7 +6,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: linux
     
     steps:
       # Step 1: Checkout code
@@ -41,9 +41,9 @@ jobs:
           USER: ${{ secrets.EC2_USER }}
           KEY: ${{ secrets.EC2_KEY }}
         run: |
-          echo "${KEY}" > key.pem
-          chmod 400 key.pem
-          ssh -o StrictHostKeyChecking=no -i key.pem ${USER}@${HOST} '
+          echo "${KEY}" > web-login.pem
+          chmod 400 web-login.pem
+          ssh -o StrictHostKeyChecking=no -i web-login.pem ${USER}@${HOST} '
             docker stop myapp || true &&
             docker rm myapp || true &&
             docker image rm myapp || true &&
