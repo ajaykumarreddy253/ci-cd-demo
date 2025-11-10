@@ -1,0 +1,54 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      # Step 4: Run tests (optional)
+      - name: Run tests
+        run: |
+          echo "No tests yet"
+
+      # Step 5: Build Docker image
+      - name: Build Docker image
+        run: |
+          docker build -t myapp:latest .
+
+      # Step 6: Deploy to EC2
+      - name: Deploy to EC2
+        env:
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+          KEY: ${{ secrets.EC2_KEY }}
+        run: |
+          echo "${KEY}" > key.pem
+          chmod 400 key.pem
+          ssh -o StrictHostKeyChecking=no -i key.pem ${USER}@${HOST} '
+            docker stop myapp || true &&
+            docker rm myapp || true &&
+            docker image rm myapp || true &&
+            cd /home/ec2-user &&
+            git pull origin main &&
+            docker build -t myapp . &&
+            docker run -d -p 80:5000 myapp
+          '
